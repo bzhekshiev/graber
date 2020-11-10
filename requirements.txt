@@ -1,0 +1,6 @@
+
+autopep8==1.5.4
+bs4==0.0.1
+extruct==0.10.0
+pylint==2.6.0
+
