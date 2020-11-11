@@ -1,16 +1,25 @@
 # -*- coding: utf-8 -*-
+from functools import lru_cache
+
 import extruct
 import requests
 from bs4 import BeautifulSoup
+from dateutil import parser
 
-SOURCES = {
-    'lenta': 'http://lenta.ru/rss',
-    'interfax': 'http://www.interfax.ru/rss.asp',
-    'kommersant': 'http://www.kommersant.ru/RSS/news.xml',
-    'm24': 'http: // www.m24.ru/rss.xml'
-}
 
-# todo - дату отформатировать
+@lru_cache(maxsize=None)
+def create_news_source_dict(filename):
+    source = {}
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            items = line.split('~')
+            source[items[0].strip()] = items[1].strip().replace('\n', '')
+    return source
+
+
+SOURCES = create_news_source_dict('news_source.txt')
+
+
 def news(source, limit=None):
     try:
         result = []
@@ -27,7 +36,7 @@ def news(source, limit=None):
                 'title': title,
                 'link': link,
                 'description': description.replace('\n', ''),
-                'published': published
+                'published': parser.parse(published).strftime('%d.%m.%Y %H:%M:%S')
             }
             result.append(article)
         return result[:limit]
@@ -65,7 +74,7 @@ def parse_microdata(metadata):
         except Exception as ee:
             print(ee)
 
-#todo какая-то подстава с description
+
 def parse_json_ld(metadata):
     if metadata:
         try:
@@ -82,17 +91,10 @@ def parse_json_ld(metadata):
             print(ee)
 
 
-if __name__ == '__main__':
-    # url = news('lenta', limit=3)[0]['link']
-    # print(url)
-    url = r'https://www.interfax.ru/world/736364'
-    # url = r'https://lenta.ru/news/2020/11/10/backyard/'
-    # url = r'https://www.m24.ru/news/obshchestvo/10112020/140776'
-    # url = r'https://www.kommersant.ru/doc/4566162'
-
+def get_article_content(url):
     if extruct.extract(get_html(url)).get('microdata'):
         metadata = extruct.extract(get_html(url)).get('microdata')
-        print(parse_microdata(metadata))
+        return parse_microdata(metadata)
     elif extruct.extract(get_html(url)).get('json-ld'):
         metadata = extruct.extract(get_html(url)).get('json-ld')
-        print(parse_json_ld(metadata))
+        return parse_json_ld(metadata)

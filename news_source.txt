@@ -1,0 +1,4 @@
+lenta ~ http://lenta.ru/rss
+interfax ~ http://www.interfax.ru/rss.asp
+kommersant ~ http://www.kommersant.ru/RSS/news.xml
+m24 ~ http://www.m24.ru/rss.xml
